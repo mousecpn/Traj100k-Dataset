@@ -18,8 +18,9 @@ You can set ```p.connect(p.DIRECT)``` to turn off the GUI.
 
 ### Resource
 Traj20k: https://drive.google.com/file/d/15zTIHrGuqgVaRn25XFDkFFyS3WRXeQFu/view?usp=sharing
+Traj100k: https://drive.google.com/file/d/1fWqWSdz_1JdXFAICy4OSCnqosn7emGa2/view?usp=sharing
 
-Traj20k (``traj_fre20_noisy_20000.json``) is a mini-version of Traj100k, which contains the following attributes:
+Traj20k (``traj_fre20_noisy_20000.json``) is a mini-version of Traj100k. Both dataset contain the following attributes:
 
  - **ee_log**: Trajectories represented by Cartesian position of the end-effector (Main)
  - **joint_pos_log**: Trajectories represented by joint position of the arm
