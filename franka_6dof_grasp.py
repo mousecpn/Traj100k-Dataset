@@ -7,7 +7,6 @@ import os
 import glob
 import random
 from scipy.spatial.transform import Rotation
-from franka_sim_test import setCameraOnRobotWrist
 
 import spatialgeometry as sg
 import roboticstoolbox as rtb
@@ -31,6 +30,63 @@ jr = [7]*pandaNumDofs
 init_joint_pose1=[0.0, -math.pi/4, 0.0, -3*math.pi/4, 0.0, math.pi/2, math.pi/4, 0.0, 0.0]
 rp = init_joint_pose1
 total_data_num = 20000
+
+def setCameraOnRobotWrist(p, robot_id, link_id, physicsClientId=0):
+    distance = 1
+    position, orientation = p.getLinkState(robot_id,link_id, physicsClientId)[4:6]
+    position = np.array(position)
+    orientation = list(orientation)
+    R_mat = np.array(p.getMatrixFromQuaternion(orientation)).reshape(3,3)
+    z_direction = R_mat[:,2]
+    y_direction = R_mat[:,1]
+    x_direction = R_mat[:,0]
+
+    camera_pose = position + 0.05*x_direction - z_direction*0.08
+    tar_p = camera_pose+z_direction*distance
+    # print(orientation)
+
+    # p.removeAllUserDebugItems()
+    # x_end_p = (np.array(camera_pose) + np.array(x_direction*2)).tolist()
+    # x_line_id = p.addUserDebugLine(camera_pose,x_end_p,[1,0,0])# y 轴
+    # y_end_p = (np.array(camera_pose) + np.array(y_direction*2)).tolist()
+    # y_line_id = p.addUserDebugLine(camera_pose,y_end_p,[0,1,0])# z轴
+    # z_end_p = (np.array(camera_pose) + np.array(z_direction*2)).tolist()
+    # z_line_id = p.addUserDebugLine(camera_pose,z_end_p,[0,0,1])
+
+
+    viewMatrix = p.computeViewMatrix(position, tar_p, -z_direction, physicsClientId=physicsClientId)
+
+    mat = np.array(viewMatrix).reshape(4,4).transpose(1,0)
+    camera_pose = mat[:3,-1]
+    camera_pose *= -1
+    z_direction = mat[:3,2]
+    y_direction = mat[:3,1]
+    x_direction = mat[:3,0]
+
+    p.removeAllUserDebugItems()
+    x_end_p = (np.array(camera_pose) + np.array(x_direction*2)).tolist()
+    x_line_id = p.addUserDebugLine(camera_pose,x_end_p,[1,0,0])# y 轴
+    y_end_p = (np.array(camera_pose) + np.array(y_direction*2)).tolist()
+    y_line_id = p.addUserDebugLine(camera_pose,y_end_p,[0,1,0])# z轴
+    z_end_p = (np.array(camera_pose) + np.array(z_direction*2)).tolist()
+    z_line_id = p.addUserDebugLine(camera_pose,z_end_p,[0,0,1])
+
+    projectionMatrix = p.computeProjectionMatrixFOV(
+        fov=42.5,               # 摄像头的视线夹角
+        # fov=80,               # 摄像头的视线夹角
+        aspect=1,
+        nearVal=0.01,            # 摄像头焦距下限
+        farVal=10,               # 摄像头能看上限
+        physicsClientId=physicsClientId
+    )
+
+    p.getCameraImage(
+        width=320, height=200,
+        viewMatrix=viewMatrix,
+        projectionMatrix=projectionMatrix,
+        physicsClientId=physicsClientId
+    )
+    return
 
 def angle_axis(T, Td):
     e = np.empty(6)
